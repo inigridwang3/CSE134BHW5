@@ -19,6 +19,7 @@
         }
     </style>
     <script src="theme.js" defer></script>
+    <script src="project-panel.js" defer></script>
 </head>
 <body>
     <header>
@@ -49,4 +50,21 @@
                 <li>UI/UX Engineering for Design Brands</li>
             </ol>
         </article>
+
+        <section>
+            <h2>Interactive Project Viewer</h2>
+            <p>Explore our engineering highlights using our custom web component.</p>
+
+            <!-- External Page Control to toggle attribute -->
+            <button type="button" id="toggle-compact-btn">Toggle Compact View</button>
+
+            <!-- The Custom Web Component -->
+            <project-panel></project-panel>
+           
+            <noscript>
+                <div class="noscript-fallback" style="padding: 1rem; border: 1px dashed var(--border-color, #ccc); margin-top: 1rem; border-radius: 8px;">
+                    <p>⚠️ <strong>Enable JavaScript</strong> to load live data and interactive controls for this project widget.</p>
+                </div>
+            </noscript>
+        </section>
     </main>
