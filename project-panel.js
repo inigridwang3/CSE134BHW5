@@ -74,6 +74,8 @@ class ProjectPanel extends HTMLElement {
 
   // PART 2 ADDITION: Asynchronous remote fetch method option
   async fetchRemoteData() {
+    if (this.loading) return;
+    const idx = this.currentIndex;
     this.loading = true;
     this.error = null;
     this.statusMessage = "Loading live data from server...";
@@ -90,10 +92,8 @@ class ProjectPanel extends HTMLElement {
         throw new Error("Expected a non-empty 'fact' string in response.");
       }
 
-      this.projects[this.currentIndex] = {
-        ...this.projects[this.currentIndex],
-        name: `Live API Fact: ${data.fact.trim()}`
-      };
+            this.projects[idx] = { ...this.projects[idx], liveFact: data.fact.trim() };
+      
       this.error = null;
       this.statusMessage = "Loaded remote data successfully!";
     } catch (err) {
@@ -107,97 +107,75 @@ class ProjectPanel extends HTMLElement {
     }
   } 
 
-  ensureLiveRegion() {
-    if (!this.statusEl) {
+    // Builds the DOM once; afterwards render() only updates text and state
+  render() {
+    if (!this.built) {
+      this.heading = document.createElement("h3");
+      this.heading.textContent = "Featured Project Showcase";
+
       this.statusEl = document.createElement("div");
       this.statusEl.className = "status-message";
       this.statusEl.setAttribute("role", "status");
       this.statusEl.setAttribute("aria-live", "polite");
-    }
-    this.statusEl.textContent = this.statusMessage;
-    return this.statusEl;
-  }
 
-  render() {
-    this.innerHTML = "";
+      this.titleEl = document.createElement("p");
+      this.titleEl.className = "project-title";
+      this.nameEl = document.createElement("strong");
+      this.techEl = document.createElement("span");
+      this.titleEl.append(this.nameEl, this.techEl);
 
-    const heading = document.createElement("h3");
-    heading.textContent = "Featured Project Showcase";
+      this.descEl = document.createElement("p");
+      this.descEl.className = "project-desc";
 
-    const statusMsg = this.ensureLiveRegion();
+      this.factEl = document.createElement("p");
+      this.factEl.className = "live-fact";
+      this.factEl.hidden = true;
 
-    const titleEl = document.createElement("p");
-    titleEl.className = "project-title";
-    const strongName = document.createElement("strong");
-    strongName.textContent = this.projects[this.currentIndex].name;
-    titleEl.appendChild(strongName);
-    titleEl.appendChild(
-      document.createTextNode(` (${this.projects[this.currentIndex].tech})`)
-    );
+      const controls = document.createElement("div");
+      controls.className = "component-controls";
+      controls.style.cssText = "display:flex;gap:10px;margin-top:1rem";
 
-    const descEl = document.createElement("p");
-    descEl.className = "project-desc";
-    descEl.textContent = this.projects[this.currentIndex].desc;
-
-    // Button container holding both Part 1 cycle button and Part 2 fetch/retry buttons
-    const btnContainer = document.createElement("div");
-    btnContainer.className = "component-controls";
-    btnContainer.style.display = "flex";
-    btnContainer.style.gap = "10px";
-    btnContainer.style.marginTop = "1rem";
-
-    if (this.error) {
-      const retryBtn = document.createElement("button");
-      retryBtn.type = "button";
-      retryBtn.className = "retry-btn";
-      retryBtn.textContent = "Try Again";
-      retryBtn.disabled = this.loading;
-      btnContainer.appendChild(retryBtn);
-    } else {
-      const nextBtn = document.createElement("button");
-      nextBtn.type = "button";
-      nextBtn.className = "next-project-btn";
-      nextBtn.textContent = "Next Project";
-      btnContainer.appendChild(nextBtn);
-
-      const fetchBtn = document.createElement("button");
-      fetchBtn.type = "button";
-      fetchBtn.className = "fetch-api-btn";
-      fetchBtn.textContent = this.loading ? "Loading..." : "Fetch Live API Data";
-      fetchBtn.disabled = this.loading;
-      btnContainer.appendChild(fetchBtn);
-    }
-
-    // Append to the component root
-    this.appendChild(heading);
-    this.appendChild(statusMsg);
-    this.appendChild(titleEl);
-    this.appendChild(descEl);
-    this.appendChild(btnContainer);
-  }
- 
-  setupListeners() {
-    const nextBtn = this.querySelector(".next-project-btn");
-    if (nextBtn) {
-      nextBtn.addEventListener("click", () => {
+      this.nextBtn = document.createElement("button");
+      this.nextBtn.type = "button";
+      this.nextBtn.className = "next-project-btn";
+      this.nextBtn.textContent = "Next Project";
+      this.nextBtn.addEventListener("click", () => {
         this.currentIndex = (this.currentIndex + 1) % this.projects.length;
+        this.error = null;
         this.statusMessage = `Project ${this.currentIndex + 1} of ${this.projects.length}`;
         this.render();
-        this.setupListeners();
       });
+
+      this.fetchBtn = document.createElement("button");
+      this.fetchBtn.type = "button";
+      this.fetchBtn.className = "fetch-api-btn";
+      this.fetchBtn.addEventListener("click", () => this.fetchRemoteData());
+
+      controls.append(this.nextBtn, this.fetchBtn);
+      this.append(this.heading, this.statusEl, this.titleEl, this.descEl, this.factEl, controls);
+      this.built = true;
     }
 
-    // PART 2 ADDITION: Trigger remote fetch or retry
-    const fetchBtn = this.querySelector(".fetch-api-btn");
-    if (fetchBtn) {
-      fetchBtn.addEventListener("click", () => this.fetchRemoteData());
-    }
+    const p = this.projects[this.currentIndex];
+    this.statusEl.textContent = this.statusMessage;
+    this.nameEl.textContent = p.name;
+    this.techEl.textContent = ` (${p.tech})`;
+    this.descEl.textContent = p.desc;
+    this.factEl.hidden = !p.liveFact;
+    this.factEl.textContent = p.liveFact ? `Live API fact: ${p.liveFact}` : "";
 
-    const retryBtn = this.querySelector(".retry-btn");
-    if (retryBtn) {
-      retryBtn.addEventListener("click", () => this.fetchRemoteData());
-    }  
+    this.nextBtn.disabled = this.loading;
+    this.fetchBtn.disabled = this.loading;
+    this.fetchBtn.classList.toggle("retry-btn", Boolean(this.error) && !this.loading);
+    this.fetchBtn.textContent = this.loading
+      ? "Loading..."
+      : this.error
+        ? "Try Again"
+        : "Fetch Live API Data";
   }
+
+  // Listeners are attached once inside render(); kept so existing calls are harmless
+  setupListeners() {}
 }
 
 // Register custom element tag (must include a hyphen)
