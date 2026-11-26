@@ -4,6 +4,11 @@ This folder contains the static site generator exercise for Homework 5, demonstr
 
 ## Commands
 
-1. **Install Dependencies:**
-   ```bash
-   npm install
+### Install Dependencies
+npm install
+
+### Build Site
+npm run build
+
+### Preview Locally
+npx @11ty/eleventy --serve

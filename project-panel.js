@@ -22,12 +22,19 @@ class ProjectPanel extends HTMLElement {
   }
 
   connectedCallback() {
-    // PART 2 ADDITION: Apply stored compact preference on load
-    if (this.isCompactPref) {
-      this.setAttribute("compact", "");
-    }
+    const savedCompact = this.loadPreference();
+    this.toggleAttribute("compact", savedCompact);
     this.render();
     this.setupListeners();
+    this.syncExternalToggle();
+  }
+
+  syncExternalToggle() {
+    const toggleBtn = document.querySelector("#toggle-compact-btn");
+    if (!toggleBtn) return;
+    const isCompact = this.hasAttribute("compact");
+    toggleBtn.setAttribute("aria-pressed", String(isCompact));
+    toggleBtn.textContent = isCompact ? "Expand View" : "Toggle Compact View";
   }
 
   // Responds when the external page button toggles the 'compact' attribute
@@ -35,9 +42,8 @@ class ProjectPanel extends HTMLElement {
     if (name === "compact" && oldValue !== newValue) {
       const isCompact = this.hasAttribute("compact");
       this.classList.toggle("is-compact", isCompact);
-      
-      // PART 2 ADDITION: Save preference change to localStorage
       this.savePreference(isCompact);
+      this.syncExternalToggle();
     }
   }
 
@@ -60,11 +66,10 @@ class ProjectPanel extends HTMLElement {
 
   savePreference(isCompact) {
     try {
-      localStorage.setItem("hw5-project-panel-mode", isCompact);
+      localStorage.setItem("hw5-project-panel-mode", String(Boolean(isCompact)));
     } catch (e) {
       console.warn("Could not save preference:", e);
-      // Requirement check: Even if writing fails, the preference still applies for the current page session
-    } 
+    }
   }
 
   // PART 2 ADDITION: Asynchronous remote fetch method option
@@ -85,18 +90,21 @@ class ProjectPanel extends HTMLElement {
       }
 
       // Temporarily swap current item with fetched remote data to satisfy Part 2
-      this.projects[this.currentIndex].name = "Live API Fact: " + data.fact;
+      this.projects[this.currentIndex] = {
+        ...this.projects[this.currentIndex],
+        name: `Live API Fact: ${data.fact.trim()}`
+      };
+      this.error = null;
       this.statusMessage = "Loaded remote data successfully!";
-      this.loading = false;
     } catch (err) {
       console.error("Fetch error:", err);
-      this.error = err.message || "Network request failed.";
-      this.statusMessage = "Failed to load remote data.";
-      this.loading = false;
+      this.error = err instanceof Error ? err.message : "Network request failed.";
+      this.statusMessage = "Failed to load remote data. Click Try Again to retry.";
     } finally {
+      this.loading = false;
       this.render();
       this.setupListeners();
-    }
+    } 
   }
 
   render() {
@@ -114,7 +122,12 @@ class ProjectPanel extends HTMLElement {
 
     const titleEl = document.createElement("p");
     titleEl.className = "project-title";
-    titleEl.innerHTML = `<strong>${this.projects[this.currentIndex].name}</strong> (${this.projects[this.currentIndex].tech})`;
+    const strongName = document.createElement("strong");
+    strongName.textContent = this.projects[this.currentIndex].name;
+    titleEl.appendChild(strongName);
+    titleEl.appendChild(
+      document.createTextNode(` (${this.projects[this.currentIndex].tech})`)
+    );
 
     const descEl = document.createElement("p");
     descEl.className = "project-desc";
@@ -183,3 +196,13 @@ class ProjectPanel extends HTMLElement {
 
 // Register custom element tag (must include a hyphen)
 customElements.define("project-panel", ProjectPanel);
+
+document.addEventListener("DOMContentLoaded", () => {
+  const toggleBtn = document.querySelector("#toggle-compact-btn");
+  const panel = document.querySelector("project-panel");
+  if (toggleBtn && panel) {
+    toggleBtn.addEventListener("click", () => {
+      panel.toggleAttribute("compact");
+    });
+  }
+});

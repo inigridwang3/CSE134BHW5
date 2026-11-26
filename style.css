@@ -397,10 +397,10 @@ input.valid, textarea.valid {
   --bg-surface: #1e293b;
   --bg-card: #1e293b;
   --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --accent-primary: #818cf8;
-  --accent-glow: rgba(129, 140, 248, 0.2);
-  --border-color: #334155;
+  --text-muted: #cbd5e1;
+  --accent-primary: #a5b4fc;
+  --accent-glow: rgba(165, 180, 252, 0.2);
+  --border-color: #475569;
 }
 
 /* Hide theme control by default until JS initializes it */
@@ -447,12 +447,18 @@ input.valid, textarea.valid {
 }
 
 /* ==========================================================================
-   PART 1: WEB COMPONENT STYLES (<project-panel>)
+   PART 1 & PART 3: WEB COMPONENT STYLES & THEME INTEGRATION (<project-panel>)
    ========================================================================== */
 project-panel {
+  --panel-bg: var(--bg-surface, #ffffff);
+  --panel-text: var(--text-main, #1e293b);
+  --panel-border: var(--border-color, #cbd5e1);
+  --panel-accent: var(--accent-primary, #4338ca);
+
   display: block;
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-color);
+  background-color: var(--panel-bg, #ffffff);
+  color: var(--panel-text, #1e293b);
+  border: 1px solid var(--panel-border, #cbd5e1);
   border-radius: 14px;
   padding: 2rem;
   margin-top: 1.5rem;
@@ -462,26 +468,26 @@ project-panel {
 
 project-panel h3 {
   margin-top: 0;
-  color: var(--text-main);
+  color: var(--panel-text, #1e293b);
   font-size: 1.25rem;
 }
 
 project-panel .project-title {
   font-weight: 600;
-  color: var(--accent-primary);
+  color: var(--panel-accent, #4338ca);
   margin-bottom: 0.5rem;
 }
 
 project-panel .status-message {
-  font-size: 0.875rem;
-  color: var(--text-muted);
+  font-size: 0.9rem;
+  color: var(--text-muted, #475569);
   display: block;
-  margin: 1rem 0;
+  margin: 0.75rem 0;
+  font-weight: 500;
 }
 
-/* Component's internal button */
 project-panel button {
-  background-color: var(--accent-primary);
+  background-color: var(--panel-accent, #4338ca);
   color: #ffffff;
   font-weight: 600;
   padding: 0.5em 1.2em;
@@ -491,25 +497,12 @@ project-panel button {
   transition: opacity 0.2s ease;
 }
 
+[data-theme="dark"] project-panel button {
+  color: #0f172a;
+}
+
 project-panel button:hover {
   opacity: 0.9;
-}
-
-/* Visible style change when external toggle button adds the 'compact' attribute */
-project-panel.is-compact {
-  padding: 1rem 1.5rem;
-  background-color: var(--bg-color);
-}
-
-project-panel.is-compact .status-message {
-  display: none; /* Hide status details in compact mode */
-}
-
-project-panel .status-message {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  margin-bottom: 0.75rem;
-  font-weight: 500;
 }
 
 project-panel button:disabled {
@@ -517,32 +510,11 @@ project-panel button:disabled {
   cursor: not-allowed;
 }
 
-/* ==========================================================================
-   PART 3: WEB COMPONENT THEME INTEGRATION (<project-panel>)
-   ========================================================================== */
-project-panel {
-  /* Pass theme variables from the surrounding page into the component */
-  --panel-bg: var(--bg-surface, #ffffff);
-  --panel-text: var(--text-main, #111827);
-  --panel-border: var(--border-color, #e5e7eb);
-  
-  display: block;
-  background-color: var(--panel-bg);
-  color: var(--panel-text);
-  border: 1px solid var(--panel-border);
-  border-radius: 14px;
-  padding: 2rem;
-  margin-top: 1.5rem;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
-  transition: all 0.25s ease;
-}
-
-/* Compact state styling */
 project-panel.is-compact {
   padding: 1rem 1.5rem;
-  background-color: var(--bg-color, #f9fafb);
+  background-color: var(--bg-color, #f8fafc);
 }
 
-project-panel.is-compact .status-message {
+project-panel.is-compact .project-desc {
   display: none;
 }
