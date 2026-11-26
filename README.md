@@ -1,25 +1,50 @@
-# CSE 134B Homework 5 Portfolio & Web Components
+# CSE 134B Homework 5: Portfolio & Web Components
 
-## SSG Exercise Path & Preview Instructions
-- **SSG Exercise Folder Path:** `ssg-exercise/`
-- **Pages Generated / Previewed:** `index.html` (Home) and `about.html` (About)
-- **SSG Commands:** See `ssg-exercise/README.md` for full installation, build, and local preview instructions.
+## SSG exercise
+- **Folder:** `ssg-exercise/`
+- **Generator:** Eleventy (11ty)
+- **Pages to preview:**
+  - Home (`index.html`): http://localhost:8080/
+  - About (`about.html`): http://localhost:8080/about/
+- **Commands** (run inside `ssg-exercise/`; full details in `ssg-exercise/README.md`):
 
----
+```bash
+npm install
+npm run build
+npm run preview
+```
 
-## Design Note: Component Architecture & State Lifecycle
+## Design note
 
-### User Goal & Action Traced
-* **Visitor Goal:** The visitor wants to explore dynamic project insights or live data updates without reloading the entire portfolio page.
-* **Action:** The visitor clicks the **"Fetch Live API Data"** button inside the `<project-panel>` custom element.
+**What the visitor wants:** to explore project details and get live data
+without reloading the page.
 
-### Lifecycle Trace
-1. **Trigger & Loading State:** 
-   * The click event listener in `project-panel.js` fires `fetchRemoteData()`.
-   * The component sets `this.loading = true`, updates the accessible status element (`role="status"`, `aria-live="polite"`), and re-renders to display a disabled loading state ("Loading...").
-2. **API Request & Defensive Validation:**
-   * An asynchronous `fetch()` call requests data from the remote endpoint (`https://catfact.ninja/fact`).
-   * The component checks `response.ok` and validates defensively that the returned JSON contains a valid string property.
-3. **Outcome States:**
-   * **On Success:** The component updates its internal state with the fetched data, resets `this.loading = false`, updates the DOM title/description, and clears any previous error states.
-   * **On Failure (Network/Server Error):** The `catch` block intercepts the exception, sets `this.error`, logs a warning, and switches the control panel view to display a **"Try Again"** retry button so the user can recover smoothly.
+**Action traced:** the visitor clicks "Fetch Live API Data" in the
+`<project-panel>` custom element.
+
+1. The click handler calls `fetchRemoteData()`.
+2. The component sets `loading = true`, disables the fetch button, and shows
+   "Loading live data from server..." in the `role="status"` element.
+3. `fetch("https://catfact.ninja/fact")` requests data. The component checks
+   `response.ok` and confirms the JSON has a non-empty string `fact`.
+4. The fact is written into the panel with `textContent`, so remote text is
+   never inserted as HTML.
+
+**What the visitor sees**
+- **While waiting:** the status reads "Loading live data from server..." and
+  the button is disabled.
+- **On success:** the status reads "Loaded remote data successfully!" and the
+  fact appears in the panel.
+- **On failure:** the status reads "Failed to load remote data. Click Try Again
+  to retry." and the button's label changes to "Try Again". Clicking it
+  repeats the request without reloading the page, and the error clears when
+  it succeeds.
+
+**Other behavior**
+- The external "Toggle Compact View" button toggles the observed `compact`
+  attribute, and the component responds in `attributeChangedCallback()`.
+- The compact/expanded choice is saved in `localStorage` under
+  `hw5-project-panel-mode`, validated on load, and wrapped in `try/catch`, so
+  the control still works if storage is unavailable.
+- With JavaScript disabled, the rest of the portfolio stays usable and a
+  `<noscript>` message explains that the widget needs JavaScript.
