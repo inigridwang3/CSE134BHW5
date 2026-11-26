@@ -1,14 +1,24 @@
-# SSG Exercise - Eleventy (11ty) Shared Section
+# SSG Exercise: Eleventy (11ty) Shared Section
 
-This folder contains the static site generator exercise for Homework 5, demonstrating a shared footer component across multiple pages.
+Two pages (Home and About) built with Eleventy that share one layout,
+including a common footer.
 
 ## Commands
 
-### Install Dependencies
-npm install
+```bash
+npm install        # install dependencies
+npm run build      # build the site into _site/
+npm run preview    # serve locally with live reload
+```
 
-### Build Site
-npm run build
+## Pages to preview
 
-### Preview Locally
-npx @11ty/eleventy --serve
+After running `npm run preview`, open:
+- Home: http://localhost:8080/ (also reachable at http://localhost:8080/index)
+- About: http://localhost:8080/about/
+
+## Shared section
+
+The footer lives in `_includes/layout.html` (change this if your file is named
+differently). Edit it there, run `npm run build`, and both pages show the
+change.
