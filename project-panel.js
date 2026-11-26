@@ -78,6 +78,7 @@ class ProjectPanel extends HTMLElement {
     this.error = null;
     this.statusMessage = "Loading live data from server...";
     this.render();
+    this.setupListeners();
 
     try {
       const response = await fetch("https://catfact.ninja/fact");
@@ -85,11 +86,10 @@ class ProjectPanel extends HTMLElement {
         throw new Error(`HTTP status ${response.status}`);
       }
       const data = await response.json();
-      if (typeof data?.fact !== "string") {
-        throw new Error("Expected a 'fact' string in response.");
+      if (typeof data?.fact !== "string" || !data.fact.trim()) {
+        throw new Error("Expected a non-empty 'fact' string in response.");
       }
 
-      // Temporarily swap current item with fetched remote data to satisfy Part 2
       this.projects[this.currentIndex] = {
         ...this.projects[this.currentIndex],
         name: `Live API Fact: ${data.fact.trim()}`
@@ -104,7 +104,18 @@ class ProjectPanel extends HTMLElement {
       this.loading = false;
       this.render();
       this.setupListeners();
-    } 
+    }
+  } 
+
+  ensureLiveRegion() {
+    if (!this.statusEl) {
+      this.statusEl = document.createElement("div");
+      this.statusEl.className = "status-message";
+      this.statusEl.setAttribute("role", "status");
+      this.statusEl.setAttribute("aria-live", "polite");
+    }
+    this.statusEl.textContent = this.statusMessage;
+    return this.statusEl;
   }
 
   render() {
@@ -113,12 +124,7 @@ class ProjectPanel extends HTMLElement {
     const heading = document.createElement("h3");
     heading.textContent = "Featured Project Showcase";
 
-    // PART 2 ADDITION: Accessible status element with role="status" and aria-live
-    const statusMsg = document.createElement("div");
-    statusMsg.className = "status-message";
-    statusMsg.setAttribute("role", "status");
-    statusMsg.setAttribute("aria-live", "polite");
-    statusMsg.textContent = this.statusMessage;
+    const statusMsg = this.ensureLiveRegion();
 
     const titleEl = document.createElement("p");
     titleEl.className = "project-title";
